@@ -1,6 +1,9 @@
 from controllers import security
 from database import db_users
 import re
+from datetime import datetime, timedelta
+import secrets
+import hashlib
 
 formatUsername = r'^[a-zA-Z0-9]+$'
 formatEmail = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -68,5 +71,26 @@ def matchLogin(user: dict) -> bool:
     if len(password) < 8:
         return False
     if not re.search(r'[A-Za-z]', password) or not re.search(r'[0-9]', password):
+        return False
+    return True
+
+
+def generate_token(email: str) -> str:
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now() + timedelta(hours=24)
+    token_data = {
+        "email": email.lower(),
+        "token": token,
+        "expires_at": expires_at
+    }
+    db_users.addToken(token_data)
+    return token
+
+def validate_token(token: str) -> bool:
+    token_data = db_users.findToken(token)
+    if not token_data:
+        return False
+    if token_data["expires_at"] < datetime.now():
+        db_users.deleteToken(token)
         return False
     return True

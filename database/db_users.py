@@ -2,16 +2,17 @@ from pymongo.errors import DuplicateKeyError
 from database.connection import client
 from controllers import security
 
-collection = client.RestaurantRecommender.Users
+userCollection = client.RestaurantRecommender.Users
+tokenCollection = client.RestaurantRecommender.Tokens
 def addUsers(user: dict) -> bool:
     try:
-        collection.create_index([("username", 1)], unique=True)
-        collection.create_index([("email", 1)], unique=True)
-        if collection.find_one({"username": user.get("username")}):
+        userCollection.create_index([("username", 1)], unique=True)
+        userCollection.create_index([("email", 1)], unique=True)
+        if userCollection.find_one({"username": user.get("username")}):
             return False
-        if collection.find_one({"email": user.get("email")}):
+        if userCollection.find_one({"email": user.get("email")}):
             return False
-        collection.insert_one(user)
+        userCollection.insert_one(user)
         return True
 
     except DuplicateKeyError:
@@ -21,7 +22,7 @@ def addUsers(user: dict) -> bool:
         return False
     
 def validUser(user: dict) -> bool:
-    user_db = collection.find_one({"email": user["email"]})
+    user_db = userCollection.find_one({"email": user["email"]})
     if not user_db:
         return False
     elif user_db["password"] == None:
@@ -30,3 +31,14 @@ def validUser(user: dict) -> bool:
         return False
     else:
         return True
+    
+def addToken(token_data: dict) -> None:
+    tokenCollection.create_index("token", unique=True)
+    token_data["token"] = security.hashToken(token_data["token"])
+    tokenCollection.insert_one(token_data)
+
+def findToken(token: str) -> dict:
+    return tokenCollection.find_one({"token": security.hashToken(token)})
+
+def deleteToken(token: str) -> None:
+    tokenCollection.delete_one({"token": security.hashToken(token)})
