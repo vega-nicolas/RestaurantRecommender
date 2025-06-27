@@ -22,6 +22,11 @@ def addUsers(user: dict) -> bool:
     
 def validUser(user: dict) -> bool:
     user_db = collection.find_one({"email": user["email"]})
-    if user and security.checkPassword(user["password"], user_db['password']):
-        return user
-    return None
+    if not user_db:
+        return False
+    elif user_db["password"] == None:
+        return False
+    elif not security.checkPassword(user["password"], user_db['password']):
+        return False
+    else:
+        return True
