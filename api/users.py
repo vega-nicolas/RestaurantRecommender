@@ -12,7 +12,7 @@ async def new_user(user: User):
         return {"message": "User registered successfully"}
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User registration failed")
 
-@router.post("/api/login/", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/api/login/", status_code=status.HTTP_200_OK)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if controller_users.validUser(dict({"email": form_data.username, "password": form_data.password})):
         token = controller_users.generate_token(form_data.username)
