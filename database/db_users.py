@@ -1,6 +1,7 @@
 from pymongo.errors import DuplicateKeyError
 from database.connection import client
 from controllers import security
+from datetime import datetime
 
 userCollection = client.RestaurantRecommender.Users
 tokenCollection = client.RestaurantRecommender.Tokens
@@ -12,6 +13,7 @@ def addUsers(user: dict) -> bool:
             return False
         if userCollection.find_one({"email": user.get("email")}):
             return False
+        user["created_at"] == datetime.now()
         userCollection.insert_one(user)
         return True
 
